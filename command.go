@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -13,8 +14,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	first := os.Args[1]
-	second := os.Args[2]
+	first := url.QueryEscape(os.Args[1])
+	second := url.QueryEscape(os.Args[2])
 
 	request := fmt.Sprintf("http://www.google.com/trends/fetchComponent?q=%s,%s&cid=TIMESERIES_GRAPH_0&export=3", first, second)
 	fmt.Println(request)
