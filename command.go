@@ -1,62 +1,73 @@
 package main
 
 import (
-	// "encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"regexp"
+	"strings"
 )
 
+/*
+ * get response from google trends (as string)
+ */
 func resultJs(firstArg string, secondArg string) string {
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	_, err := os.Open(dir + "/fake_resp.html")
-	result := "{blabal}"
+	request := fmt.Sprintf("http://www.google.com/trends/fetchComponent?q=%s,%s&cid=TIMESERIES_GRAPH_0&export=3", firstArg, secondArg)
+	// request := fmt.Sprintf("https://raw.githubusercontent.com/kiote/savvy_phrase/master/fake_resp.html?a=%s,%s", firstArg, secondArg)
+	fmt.Println(request)
+	resp, err := http.Get(request)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("%s", err)
 		os.Exit(1)
-		request := fmt.Sprintf("http://www.google.com/trends/fetchComponent?q=%s,%s&cid=TIMESERIES_GRAPH_0&export=3", firstArg, secondArg)
-		fmt.Println(request)
-		resp, err := http.Get(request)
-
-		if err != nil {
-			fmt.Printf("%s", err)
-			os.Exit(1)
-		}
-
-		defer resp.Body.Close()
-		contents, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Printf("%s", err)
-			os.Exit(1)
-		}
-
-		result = fmt.Sprintf("%s\n", string(contents))
 	}
+
+	defer resp.Body.Close()
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("%s", err)
+		os.Exit(1)
+	}
+
+	result := fmt.Sprintf("%s\n", string(contents))
 
 	return result
 }
 
-func main() {
+/*
+ * returns two phrases
+ */
+func getArgs() (string, string) {
 	if len(os.Args) != 3 {
 		fmt.Printf("usage: %s \"first phrase\" \"second phrase\"\n", os.Args[0])
 		os.Exit(1)
 	}
 
-	first := url.QueryEscape(os.Args[1])
-	second := url.QueryEscape(os.Args[2])
-	result := resultJs(first, second)
+	return url.QueryEscape(os.Args[1]), url.QueryEscape(os.Args[2])
+}
 
-	fmt.Println(result)
-
+/*
+ * converts response from google trends to json-string
+ */
+func resultJson(result string) string {
 	re := regexp.MustCompile("{.*}")
-	fmt.Printf("%q\n", re.FindString(result))
+	jsonString := re.FindString(result)
+	jsonString = strings.Replace(jsonString, "\\", "", -1)
 
-	fmt.Printf("\"%s\" - %d results\n", first, 10000)
-	fmt.Printf("\"%s\" - %d results\n", second, 100000)
-	fmt.Println("Nothing to say")
+	return jsonString
+}
+
+func main() {
+	result := resultJs(getArgs())
+	result = resultJson(result)
+
+	result = result[len(result)-100:]
+
+	re := regexp.MustCompile(`"f":"(\d+)"`)
+	fs := re.FindAllStringSubmatch(result, -1)
+
+	fmt.Printf("\"%s\" - %s results\n", os.Args[1], fs[0][1])
+	fmt.Printf("\"%s\" - %s results\n", os.Args[2], fs[1][1])
 }
