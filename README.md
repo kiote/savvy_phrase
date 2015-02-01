@@ -6,10 +6,10 @@ For example, you are not sure, which phrase is correct: "I quit smoke" or "I qui
 Just run ```savvy_phrase "I quit smoke" "I quit smoking"``` and it will return you:
 
 ```
-"I quit smoke"   – 9,860 results
-"I quit smoking" – 463,000 results
+"I quit smoke"   – 6
+"I quit smoking" – 76
 
-Probably, first phrase is correct
+Probably, second phrase is correct
 ```
 
 # About
